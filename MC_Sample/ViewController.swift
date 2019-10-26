@@ -40,7 +40,7 @@ class ViewController: UIViewController {
     
     @IBAction func joinSession(_ sender: Any) {
         guard let session = session else {
-            print("Couldn't create advertiserAssistant")
+            print("Couldn't create browserViewController")
             return
         }
         let browserViewController = MCBrowserViewController(serviceType: serviceType, session: session)
@@ -101,8 +101,8 @@ extension ViewController: MCBrowserViewControllerDelegate {
         browserViewController.dismiss(animated: true, completion: nil)
     }
 
-    // 新しくピアが見つかったとき
-    // trueを返すとUIに反映される
+    // UI表示中に新しくピアが見つかったときの処理
+    // trueを返すと見つかったピアがUIに反映される
     func browserViewController(_ browserViewController: MCBrowserViewController, shouldPresentNearbyPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) -> Bool {
         return true
     }
