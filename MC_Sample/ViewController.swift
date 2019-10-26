@@ -18,38 +18,38 @@ class ViewController: UIViewController {
     
     var peerID :MCPeerID!
     var session: MCSession!
-    let serviceType = "mc-sample"
+    let serviceType = "mc-message"
     var advertiserAssistant: MCAdvertiserAssistant!
     var browserViewController: MCBrowserViewController!
-    
+
     @IBOutlet weak var textField: UITextField!
- 
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         self.peerID = MCPeerID(displayName: UIDevice.current.name)
         self.session = MCSession(peer: self.peerID)
         self.session.delegate = self
-        
+
         self.advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session: self.session)
-        // advertiserAssistant.delegate = self
-        
+        advertiserAssistant.delegate = self
+
         self.browserViewController = MCBrowserViewController(serviceType: serviceType, session: self.session)
         self.browserViewController.delegate = self
-        
+
         textField.delegate = self
     }
-    
+
     @IBAction func startHosting(_ sender: Any) {
         self.advertiserAssistant.start()
         print(#function)
     }
-    
+
     @IBAction func joinSession(_ sender: Any) {
         self.present(self.browserViewController, animated: true, completion: nil)
         print(#function)
     }
-    
+
     @IBAction func sendMessage(_ sender: Any) {
         guard let session = session else {
             print("Couldn't send Message")
@@ -64,7 +64,6 @@ class ViewController: UIViewController {
         }
         print(#function)
     }
-    
 }
 
 // MARK: - MCSessionDelegate
@@ -107,19 +106,25 @@ extension ViewController: MCSessionDelegate {
 // MARK: - MCAdvertiserAssistantDelegate
 
 extension ViewController: MCAdvertiserAssistantDelegate {
+    func advertiserAssistantDidDismissInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
+        print(#function)
+    }
     
+    func advertiserAssistantWillPresentInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
+        print(#function)
+    }
 }
 
 // MARK: - MCBrowserViewControllerDelegate
 extension ViewController: MCBrowserViewControllerDelegate {
     // ユーザがDoneしたとき
     func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
-        self.browserViewController.dismiss(animated: true, completion: nil)
+        self.dismiss(animated: true, completion: nil)
     }
     
     // ユーザがCancelしたとき
     func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
-        self.browserViewController.dismiss(animated: true, completion: nil)
+        self.dismiss(animated: true, completion: nil)
     }
 
     // UI表示中に新しくピアが見つかったときの処理
