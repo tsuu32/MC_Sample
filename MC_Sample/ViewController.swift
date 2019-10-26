@@ -27,26 +27,27 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.peerID = MCPeerID(displayName: UIDevice.current.name)
-        self.session = MCSession(peer: self.peerID)
-        self.session.delegate = self
+        peerID = MCPeerID(displayName: UIDevice.current.name)
+        session = MCSession(peer: peerID)
+        session.delegate = self
 
-        self.advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session: self.session)
+        advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session:
+            session)
         advertiserAssistant.delegate = self
 
-        self.browserViewController = MCBrowserViewController(serviceType: serviceType, session: self.session)
-        self.browserViewController.delegate = self
+        browserViewController = MCBrowserViewController(serviceType: serviceType, session: session)
+        browserViewController.delegate = self
 
         textField.delegate = self
     }
 
     @IBAction func startHosting(_ sender: Any) {
-        self.advertiserAssistant.start()
+        advertiserAssistant.start()
         print(#function)
     }
 
     @IBAction func joinSession(_ sender: Any) {
-        self.present(self.browserViewController, animated: true, completion: nil)
+        present(browserViewController, animated: true, completion: nil)
         print(#function)
     }
 
@@ -78,7 +79,7 @@ extension ViewController: MCSessionDelegate {
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         print(#function)
         guard let message = String(data: data, encoding: String.Encoding.utf8) else { return }
-        self.textField.text = message
+        textField.text = message
     }
     
     // Called when a nearby peer opens a byte stream connection to the local peer.
@@ -119,12 +120,12 @@ extension ViewController: MCAdvertiserAssistantDelegate {
 extension ViewController: MCBrowserViewControllerDelegate {
     // ユーザがDoneしたとき
     func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
-        self.dismiss(animated: true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
     
     // ユーザがCancelしたとき
     func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
-        self.dismiss(animated: true, completion: nil)
+        dismiss(animated: true, completion: nil)
     }
 
     // UI表示中に新しくピアが見つかったときの処理
