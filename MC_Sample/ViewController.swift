@@ -11,6 +11,8 @@
 // kMCSessionMaximumNumberOfPeers 8
 // であることから接続グループは最大8人最小2人
 
+//
+
 import UIKit
 import MultipeerConnectivity
 
@@ -19,8 +21,10 @@ class ViewController: UIViewController {
     var peerID :MCPeerID!
     var session: MCSession!
     let serviceType = "mc-message"
-    var advertiserAssistant: MCAdvertiserAssistant!
-    var browserViewController: MCBrowserViewController!
+    // var advertiserAssistant: MCAdvertiserAssistant!
+    // var browserViewController: MCBrowserViewController!
+    var nearbyServiceAdvertiser: MCNearbyServiceAdvertiser!
+    var nearbyServiceBrowser: MCNearbyServiceBrowser!
 
     @IBOutlet weak var textField: UITextField!
 
@@ -31,23 +35,28 @@ class ViewController: UIViewController {
         session = MCSession(peer: peerID)
         session.delegate = self
 
-        advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session:
-            session)
-        advertiserAssistant.delegate = self
+        // advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session: session)
+        // advertiserAssistant.delegate = self
+        nearbyServiceAdvertiser = MCNearbyServiceAdvertiser(peer: peerID, discoveryInfo: nil, serviceType: serviceType)
+        nearbyServiceAdvertiser.delegate = self
 
-        browserViewController = MCBrowserViewController(serviceType: serviceType, session: session)
-        browserViewController.delegate = self
+        // browserViewController = MCBrowserViewController(serviceType: serviceType, session: session)
+        // browserViewController.delegate = self
+        nearbyServiceBrowser = MCNearbyServiceBrowser(peer: peerID, serviceType: serviceType)
+        nearbyServiceBrowser.delegate = self
 
         textField.delegate = self
     }
 
     @IBAction func startHosting(_ sender: Any) {
-        advertiserAssistant.start()
+        // advertiserAssistant.start()
+        nearbyServiceAdvertiser.startAdvertisingPeer()
         print(#function)
     }
 
     @IBAction func joinSession(_ sender: Any) {
-        present(browserViewController, animated: true, completion: nil)
+        // present(browserViewController, animated: true, completion: nil)
+        nearbyServiceBrowser.startBrowsingForPeers()
         print(#function)
     }
 
@@ -79,7 +88,9 @@ extension ViewController: MCSessionDelegate {
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         print(#function)
         guard let message = String(data: data, encoding: String.Encoding.utf8) else { return }
-        textField.text = message
+        DispatchQueue.main.async {
+            self.textField.text = message
+        }
     }
     
     // Called when a nearby peer opens a byte stream connection to the local peer.
@@ -106,32 +117,50 @@ extension ViewController: MCSessionDelegate {
 
 // MARK: - MCAdvertiserAssistantDelegate
 
-extension ViewController: MCAdvertiserAssistantDelegate {
-    func advertiserAssistantDidDismissInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
-        print(#function)
-    }
-    
-    func advertiserAssistantWillPresentInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
-        print(#function)
+//extension ViewController: MCAdvertiserAssistantDelegate {
+//    func advertiserAssistantDidDismissInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
+//        print(#function)
+//    }
+//
+//    func advertiserAssistantWillPresentInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
+//        print(#function)
+//    }
+//}
+
+// MARK: - MCNearbyServiceAdvertiserDelegate
+extension ViewController: MCNearbyServiceAdvertiserDelegate {
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Swift.Void) {
+        invitationHandler(true, session)
     }
 }
 
 // MARK: - MCBrowserViewControllerDelegate
-extension ViewController: MCBrowserViewControllerDelegate {
-    // ユーザがDoneしたとき
-    func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
-        dismiss(animated: true, completion: nil)
+//extension ViewController: MCBrowserViewControllerDelegate {
+//    // ユーザがDoneしたとき
+//    func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
+//        dismiss(animated: true, completion: nil)
+//    }
+//
+//    // ユーザがCancelしたとき
+//    func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
+//        dismiss(animated: true, completion: nil)
+//    }
+//
+//    // UI表示中に新しくピアが見つかったときの処理
+//    // trueを返すと見つかったピアがUIに反映される
+//    func browserViewController(_ browserViewController: MCBrowserViewController, shouldPresentNearbyPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) -> Bool {
+//        return true
+//    }
+//}
+
+// MARK: - MCNearbyServiceBrowserDelegate
+extension ViewController: MCNearbyServiceBrowserDelegate {
+    func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
+        browser.invitePeer(peerID, to: session, withContext: nil, timeout: 0) //timeoutは0指定でdefault値の30が採用される
     }
     
-    // ユーザがCancelしたとき
-    func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
-        dismiss(animated: true, completion: nil)
-    }
-
-    // UI表示中に新しくピアが見つかったときの処理
-    // trueを返すと見つかったピアがUIに反映される
-    func browserViewController(_ browserViewController: MCBrowserViewController, shouldPresentNearbyPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) -> Bool {
-        return true
+    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+        
     }
 }
 
