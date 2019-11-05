@@ -11,6 +11,8 @@
 // kMCSessionMaximumNumberOfPeers 8
 // であることから接続グループは最大8人最小2人
 
+//
+
 import UIKit
 import MultipeerConnectivity
 
@@ -19,7 +21,8 @@ class ViewController: UIViewController {
     var peerID :MCPeerID!
     var session: MCSession!
     let serviceType = "mc-message"
-    var advertiserAssistant: MCAdvertiserAssistant!
+    // var advertiserAssistant: MCAdvertiserAssistant!
+    var advertiser: MCNearbyServiceAdvertiser!
     var browserViewController: MCBrowserViewController!
 
     @IBOutlet weak var textField: UITextField!
@@ -31,9 +34,10 @@ class ViewController: UIViewController {
         session = MCSession(peer: peerID)
         session.delegate = self
 
-        advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session:
-            session)
-        advertiserAssistant.delegate = self
+        // advertiserAssistant = MCAdvertiserAssistant(serviceType: serviceType, discoveryInfo: nil, session: session)
+        // advertiserAssistant.delegate = self
+        advertiser = MCNearbyServiceAdvertiser(peer: peerID, discoveryInfo: nil, serviceType: serviceType)
+        advertiser.delegate = self
 
         browserViewController = MCBrowserViewController(serviceType: serviceType, session: session)
         browserViewController.delegate = self
@@ -42,7 +46,8 @@ class ViewController: UIViewController {
     }
 
     @IBAction func startHosting(_ sender: Any) {
-        advertiserAssistant.start()
+        // advertiserAssistant.start()
+        advertiser.startAdvertisingPeer()
         print(#function)
     }
 
@@ -78,8 +83,10 @@ extension ViewController: MCSessionDelegate {
     // MCSession の sendに対応
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         print(#function)
-        guard let message = String(data: data, encoding: String.Encoding.utf8) else { return }
-        textField.text = message
+        let message = String(data: data, encoding: String.Encoding.utf8)!
+        DispatchQueue.main.async {
+            self.textField.text = message
+        }
     }
     
     // Called when a nearby peer opens a byte stream connection to the local peer.
@@ -106,13 +113,20 @@ extension ViewController: MCSessionDelegate {
 
 // MARK: - MCAdvertiserAssistantDelegate
 
-extension ViewController: MCAdvertiserAssistantDelegate {
-    func advertiserAssistantDidDismissInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
-        print(#function)
-    }
-    
-    func advertiserAssistantWillPresentInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
-        print(#function)
+//extension ViewController: MCAdvertiserAssistantDelegate {
+//    func advertiserAssistantDidDismissInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
+//        print(#function)
+//    }
+//
+//    func advertiserAssistantWillPresentInvitation(_ advertiserAssistant: MCAdvertiserAssistant) {
+//        print(#function)
+//    }
+//}
+
+// MARK: - MCNearbyServiceAdvertiserDelegate
+extension ViewController: MCNearbyServiceAdvertiserDelegate {
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+        invitationHandler(true, session)
     }
 }
 
@@ -122,7 +136,7 @@ extension ViewController: MCBrowserViewControllerDelegate {
     func browserViewControllerDidFinish(_ browserViewController: MCBrowserViewController) {
         dismiss(animated: true, completion: nil)
     }
-    
+
     // ユーザがCancelしたとき
     func browserViewControllerWasCancelled(_ browserViewController: MCBrowserViewController) {
         dismiss(animated: true, completion: nil)
